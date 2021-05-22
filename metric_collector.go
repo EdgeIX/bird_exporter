@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/czerwonk/bird_exporter/client"
 	"github.com/czerwonk/bird_exporter/metrics"
 	"github.com/czerwonk/bird_exporter/protocol"
@@ -107,7 +106,7 @@ func (m *MetricCollector) Collect(ch chan<- prometheus.Metric) {
 				log.Errorln(err)
 				return
 			}
-			e := metrics.NewAdhocExporter(fmt.Sprintf("bird_adhoc_v%v_", version))
+			e := metrics.NewAdhocExporter("bird_adhoc_")
 			for _, data := range adhoc {
 				e.Export(ap, ch, data, com)
 			}
