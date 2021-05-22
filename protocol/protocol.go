@@ -7,7 +7,6 @@ const (
 	Kernel        = 4
 	Static        = 8
 	Direct        = 16
-	Adhoc_PROTO	= 1000
 )
 
 type Protocol struct {
