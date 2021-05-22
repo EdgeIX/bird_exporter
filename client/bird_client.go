@@ -5,7 +5,6 @@ import (
 
 	"github.com/czerwonk/bird_exporter/parser"
 	"github.com/czerwonk/bird_exporter/protocol"
-	"github.com/czerwonk/bird_exporter/edgeix"
 	birdsocket "github.com/czerwonk/bird_socket"
 )
 
@@ -41,16 +40,14 @@ func (c *BirdClient) GetProtocols() ([]*protocol.Protocol, error) {
 	return c.protocolsFromBird(ipVersions)
 }
 
-func (c *BirdClient) GetEdgeIX() ([]*edgeix.Table, error) {
-	sock := c.socketFor("4")
-	fmt.Println("Getting EdgeIX Specific")
-	b, err := birdsocket.Query(sock, "show route table all where bgp_large_community ~ [(24224,1101,13)] count")
+// GetAdhoc retrieves adhoc table information from BGP Large Communities
+func (c *BirdClient) GetAdhoc(protocol *protocol.Protocol, community *protocol.LargeCommunity) ([]*protocol.Adhoc, error) {
+	sock := c.socketFor(protocol.IPVersion)
+	b, err := birdsocket.Query(sock, fmt.Sprintf("show route table all where bgp_large_community ~ [(%v,%v,%v)] count", community.ASN, community.First, community.Last))
 	if err != nil {
 		return nil, err
 	}
-	parsed := edgeix.ParseTables(b)
-	fmt.Printf("%+v\n", parsed)
-	return parsed, nil
+	return parser.ParseAdhoc(b, community), nil
 }
 
 // GetOSPFAreas retrieves OSPF specific information from bird

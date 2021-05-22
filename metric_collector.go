@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/czerwonk/bird_exporter/client"
 	"github.com/czerwonk/bird_exporter/metrics"
 	"github.com/czerwonk/bird_exporter/protocol"
@@ -68,18 +67,9 @@ func exportersForDefault(c *client.BirdClient, descriptionLabels bool) map[int][
 		protocol.Kernel: {e},
 		protocol.OSPF:   {e, metrics.NewOSPFExporter("bird_", c)},
 		protocol.Static: {e},
-		1000: {e, metrics.EdgeIXExporter("bird_", c)},
 	}
 }
 
-func exportersForEdgeIX(c *client.BirdClient, descriptionLabels bool) map[string][]metrics.MetricExporter {
-	l := metrics.NewDefaultLabelStrategy(descriptionLabels)
-	e := metrics.NewGenericProtocolMetricExporter("bird_protocol", true, l)
-
-	return map[string][]metrics.MetricExporter{
-		"rpki": {e, metrics.EdgeIXExporter("bird_", c)},
-	}
-}
 
 func (m *MetricCollector) Describe(ch chan<- *prometheus.Desc) {
 	for _, v := range m.exporters {
@@ -91,18 +81,9 @@ func (m *MetricCollector) Describe(ch chan<- *prometheus.Desc) {
 
 func (m *MetricCollector) Collect(ch chan<- prometheus.Metric) {
 	protocols, err := m.client.GetProtocols()
-	fmt.Printf("Getting Protocols, %v, %v", protocols, err)
 	if err != nil {
 		log.Errorln(err)
 		return
-	}
-	//data, err := m.client.GetEdgeIX()
-	//edgeexporter := m.exportersForEdgeIX["rpki"]
-	//edgeexporter := m.exporters[1000]
-	testprotocol := protocol.NewProtocol("rpki", 0, "4", 10)
-	//edgeexporter := metrics.EdgeIXExporter("bird_", c)
-	for _, e := range m.exporters[1000] {
-		e.Export(testprotocol, ch, m.newFormat)
 	}
 
 	for _, p := range protocols {
@@ -112,6 +93,20 @@ func (m *MetricCollector) Collect(ch chan<- prometheus.Metric) {
 
 		for _, e := range m.exporters[p.Proto] {
 			e.Export(p, ch, m.newFormat)
+		}
+	}
+
+	// For EdgeIX Adhoc implementation
+	ap := protocol.NewProtocol("adhoc", 1000, "4", 10)
+	for _, com := range protocol.GetLargeCommunities() {
+		adhoc, err := m.client.GetAdhoc(ap, &com)
+		if err != nil {
+			log.Errorln(err)
+			return
+		}
+		e := metrics.NewAdhocExporter("bird_adhoc_")
+		for _, data := range adhoc {
+			e.Export(ap, ch, data, com)
 		}
 	}
 }
