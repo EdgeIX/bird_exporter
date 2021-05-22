@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/czerwonk/bird_exporter/client"
 	"github.com/czerwonk/bird_exporter/metrics"
 	"github.com/czerwonk/bird_exporter/protocol"
@@ -97,16 +98,19 @@ func (m *MetricCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	// For EdgeIX Adhoc implementation
-	ap := protocol.NewProtocol("adhoc", 1000, "4", 10)
-	for _, com := range protocol.GetLargeCommunities() {
-		adhoc, err := m.client.GetAdhoc(ap, &com)
-		if err != nil {
-			log.Errorln(err)
-			return
-		}
-		e := metrics.NewAdhocExporter("bird_adhoc_")
-		for _, data := range adhoc {
-			e.Export(ap, ch, data, com)
+	ipVersion := []string{"4", "6"}
+	for _, version := range ipVersion {
+		ap := protocol.NewProtocol("adhoc", 1000, version, 10)
+		for _, com := range protocol.GetLargeCommunities() {
+			adhoc, err := m.client.GetAdhoc(ap, &com)
+			if err != nil {
+				log.Errorln(err)
+				return
+			}
+			e := metrics.NewAdhocExporter(fmt.Sprintf("bird_adhoc_v%v_", version))
+			for _, data := range adhoc {
+				e.Export(ap, ch, data, com)
+			}
 		}
 	}
 }
