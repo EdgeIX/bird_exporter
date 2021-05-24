@@ -1,0 +1,14 @@
+[Unit]
+Description=BIRD Metric Exporter
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=root
+ExecStart=/opt/bird_exporter/bird_exporter -bird.ipv4 -format.new=true -format.description-labels -bird.socket /var/run/bird/edgeix-rs-ipv4.ctl -bird.socket6 /var/run/bird/edgeix-rs-ipv6.ctl
+
+[Install]
+WantedBy=multi-user.target
