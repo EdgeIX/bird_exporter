@@ -2,7 +2,7 @@ package metrics
 
 import (
 	"strings"
-
+	"os"
 	"github.com/czerwonk/bird_exporter/protocol"
 )
 
@@ -19,7 +19,7 @@ func NewDefaultLabelStrategy(descriptionLabels bool) *DefaultLabelStrategy {
 
 // LabelNames returns the list of label names
 func (d *DefaultLabelStrategy) LabelNames(p *protocol.Protocol) []string {
-	res := []string{"name", "proto", "ip_version", "import_filter", "export_filter"}
+	res := []string{"name", "proto", "ip_version", "import_filter", "export_filter", "host"}
 	if d.descriptionLabels && p.Description != "" {
 		res = append(res, labelKeysFromDescription(p.Description)...)
 	}
@@ -29,7 +29,11 @@ func (d *DefaultLabelStrategy) LabelNames(p *protocol.Protocol) []string {
 
 // LabelValues returns the values for a protocol
 func (d *DefaultLabelStrategy) LabelValues(p *protocol.Protocol) []string {
-	res := []string{p.Name, protoString(p), p.IPVersion, p.ImportFilter, p.ExportFilter}
+	hostname, err := os.Hostname()
+	if err != nil {
+		panic(err)
+	}
+	res := []string{p.Name, protoString(p), p.IPVersion, p.ImportFilter, p.ExportFilter, hostname}
 	if d.descriptionLabels && p.Description != "" {
 		res = append(res, labelValuesFromDescription(p.Description)...)
 	}
