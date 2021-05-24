@@ -26,7 +26,6 @@ func (m *AdhocExporter) Export(p *protocol.Protocol, ch chan<- prometheus.Metric
 	table := data.Name
 	switch data.Name {
 		case "master4", "master6":
-			fmt.Printf("%v\n, %+v\n", com.Name, data)
 			table = data.Name
 		default:
 			if com.MasterOnly {
