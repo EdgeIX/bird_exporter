@@ -104,7 +104,7 @@ func (m *MetricCollector) Collect(ch chan<- prometheus.Metric) {
 			adhoc, err := m.client.GetAdhoc(ap, &com)
 			if err != nil {
 				log.Errorln(err)
-				return
+				panic(err)
 			}
 			e := metrics.NewAdhocExporter("bird_adhoc_")
 			for _, data := range adhoc {

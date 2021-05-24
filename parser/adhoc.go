@@ -22,9 +22,9 @@ type adhocRegex struct {
 
 func init() {
 	regex = &adhocRegex{
-		matched:	regexp.MustCompile("^(?P<match>\\d+)\\sof"),
+		matched:	regexp.MustCompile("(^\\d+-|^)(?P<match>\\d+)\\sof"),
 		total:		regexp.MustCompile("of\\s+(?P<match>\\d+)\\sroutes"),
-		name:		regexp.MustCompile("in\\stable\\st_\\d+_(?P<match>\\w+)$"),
+		name:		regexp.MustCompile("in\\stable\\s(?P<match>\\w+)$"),
 	}
 }
 
@@ -51,7 +51,12 @@ func parseTable(c *adhocContext, community *protocol.LargeCommunity) {
 	if matched == nil {
 		return
 	}
-	m, _ := strconv.Atoi(matched[1])
+	/*
+	Use match group 2 here since match group 1 is used to get around
+	an issue where the BIRD socket pads a response code to the first
+	line of the output :(
+	*/
+	m, _ := strconv.Atoi(matched[2])
 
 	total := regex.total.FindStringSubmatch(c.line)
 	if total == nil {
