@@ -21,9 +21,10 @@ func (m *AdhocExporter) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (m *AdhocExporter) Export(p *protocol.Protocol, ch chan<- prometheus.Metric, data *protocol.Adhoc, com protocol.LargeCommunity) {
-	labels := []string{"table", "use", "community", "host", "ip_version"}
+	labels := []string{"table", "use", "community", "host", "ip_version", "asn"}
 
 	table := data.Name
+	asn := "24224"
 	switch data.Name {
 		case "master4", "master6":
 			table = data.Name
@@ -31,9 +32,9 @@ func (m *AdhocExporter) Export(p *protocol.Protocol, ch chan<- prometheus.Metric
 			if com.MasterOnly {
 				return
 			} else {
-				re_table := regexp.MustCompile("^t_\\d+_(as\\d+)$").FindStringSubmatch(data.Name)
-				if len(re_table) > 0 {
-					table = re_table[1]
+				asn_table := regexp.MustCompile("^t_\\d+_as(\\d+)$").FindStringSubmatch(data.Name)
+				if len(asn_table) > 0 {
+					asn = asn_table[1]
 				}
 			}
 	}
@@ -43,6 +44,6 @@ func (m *AdhocExporter) Export(p *protocol.Protocol, ch chan<- prometheus.Metric
 		panic(err)
 	}
 	filteredDesc := prometheus.NewDesc(m.prefix+"stats", "Adhoc Exported Data", labels, nil)
-	l := []string{table, com.Name, fmt.Sprintf("%v:%v:%v", com.ASN, com.First, com.Last), hostname, p.IPVersion}
+	l := []string{table, com.Name, fmt.Sprintf("%v:%v:%v", com.ASN, com.First, com.Last), hostname, p.IPVersion, asn}
 	ch <- prometheus.MustNewConstMetric(filteredDesc, prometheus.GaugeValue, float64(data.Matched), l...)
 }
